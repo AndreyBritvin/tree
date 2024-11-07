@@ -26,6 +26,15 @@ err_code_t tree_dtor(node_t* tree)
     return OK;
 }
 
+node_t* add_node(node_t* tree, tree_val_t data_to_add)
+{
+    if (tree == NULL) return new_node(data_to_add, NULL, NULL);
+    if (tree->data < data_to_add) tree->right = add_node(tree->right, data_to_add);
+    else                          tree->left  = add_node(tree->left,  data_to_add);
+
+    return tree;
+}
+
 err_code_t print_tree(node_t* tree)
 {
     printf("(");
