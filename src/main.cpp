@@ -7,11 +7,11 @@ int main()
 {
     srand(time(NULL));
 
-    node_t* node_root = new_node(50, NULL, NULL);
+    node_t* node_root = NULL;
 
     for (int i = 0; i < 10; i++)
     {
-        add_node(node_root, rand() % 100);
+        node_root = add_node(node_root, rand() % 100);
     }
 
     tree_dump(node_root);

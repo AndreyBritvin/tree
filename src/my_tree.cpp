@@ -104,12 +104,12 @@ err_code_t make_tree_node(FILE* dot_file, node_t* tree)
     if (tree->left != NULL)
     {
         make_tree_node(dot_file, tree->left);
-        DOT_("tree%p:<l%p>->tree%p;\n", tree, tree, tree->left)
+        DOT_("tree%p:<l%p>:s->tree%p;\n", tree, tree, tree->left)
     }
     if (tree->right != NULL)
     {
         make_tree_node(dot_file, tree->right);
-        DOT_("tree%p:<r%p>->tree%p;\n", tree, tree, tree->right)
+        DOT_("tree%p:<r%p:s>->tree%p;\n", tree, tree, tree->right)
     }
 
     return OK;
