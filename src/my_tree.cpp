@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include "my_log.h"
 
 node_t* new_node(tree_val_t data, node_t* left_node, node_t* right_node)
 {
@@ -37,6 +38,8 @@ node_t* add_node(node_t* tree, tree_val_t data_to_add)
 
 err_code_t print_tree(node_t* tree)
 {
+    if (tree == NULL) return ERROR_TREE_IS_NULL;
+
     printf("(");
     if (tree->left  != NULL) print_tree(tree->left);
     printf("%d", tree->data);
@@ -46,72 +49,37 @@ err_code_t print_tree(node_t* tree)
     return OK;
 }
 
-#define DOT_(...) fprintf(dot_file, __VA_ARGS__);
+//TODO redo
+static node_t* all_nodes[100] = {}; // TODO remove this cringe
 
-size_t tree_dump(node_t* tree)
+err_code_t verificator(node_t* tree, size_t recurs_level)
 {
-    assert(tree != NULL);
-
-    static size_t graphs_counter = 0;
-
-    const char *txt_filename = "tree_dump/dot/%lu.dot";
-    const char *base_command = "dot tree_dump/dot/%lu.dot -o tree_dump/img/%lu.png -Tpng";
-    char *implementation     = (char *) calloc(strlen(base_command) + 20, sizeof(char));
-    char *txt_full_filename  = (char *) calloc(strlen(txt_filename) + 20, sizeof(char));
-
-    sprintf(implementation, base_command, graphs_counter, graphs_counter);
-    sprintf(txt_full_filename, txt_filename, graphs_counter);
-
-    printf("File to create:  %s\n", txt_full_filename);
-    printf("Command to call: %s\n", implementation);
-    tree_dot(txt_full_filename, tree);
-    system(implementation);
-
-    free(implementation);
-    free(txt_full_filename);
-
-    graphs_counter++;
-
-    return graphs_counter;
-}
-
-err_code_t tree_dot(char *filename, node_t *tree)
-{
-    assert(filename != NULL);
-
-    FILE * SAFE_OPEN_FILE(dot_file, filename, "w");
-
-    DOT_("digraph{\n"
-         "rankdir = TB;\n");
-
-    make_tree_node(dot_file, tree);
-
-    DOT_("}\n");
-
-    fclose(dot_file);
-
-    return OK;
-}
-
-err_code_t make_tree_node(FILE* dot_file, node_t* tree)
-{
-    assert(dot_file != NULL);
-    assert(tree     != NULL);
-
-    DOT_("tree%p[shape = record; label = \"{addr = %p |data = %d| {<l%p> left | <r%p> right}}\"];\n",
-                                tree, tree, tree->data, tree, tree);
-
-    if (tree->left != NULL)
+    size_t index_to_append = 0;
+    for (size_t i = 0; i < sizeof(all_nodes); i++)
     {
-        make_tree_node(dot_file, tree->left);
-        DOT_("tree%p:<l%p>:s->tree%p;\n", tree, tree, tree->left)
+        if (tree == all_nodes[i])
+        {
+            return ERROR_TREE_LOOPED;
+        }
+        if (all_nodes[i] == NULL)
+        {
+            index_to_append = i;
+            break;
+        }
     }
-    if (tree->right != NULL)
+    all_nodes[index_to_append] = tree;
+
+    err_code_t err_code = OK;
+    if (tree->left  != NULL) err_code = verificator(tree->left,  recurs_level + 1);
+    if (tree->right != NULL) err_code = verificator(tree->right, recurs_level + 1);
+
+    if (recurs_level == 0)
     {
-        make_tree_node(dot_file, tree->right);
-        DOT_("tree%p:<r%p:s>->tree%p;\n", tree, tree, tree->right)
+        for (size_t i = 0; i < sizeof(all_nodes); i++)
+        {
+            all_nodes[i] = NULL;
+        }
     }
 
-    return OK;
+    return err_code;
 }
-#undef DOT_

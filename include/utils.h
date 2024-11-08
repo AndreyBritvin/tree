@@ -20,6 +20,8 @@ enum errors
 {
     OK,
     ERROR_FILE,
+    ERROR_TREE_IS_NULL,
+    ERROR_TREE_LOOPED,
 };
 
 #endif //UTILS_H_
