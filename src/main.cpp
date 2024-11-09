@@ -8,18 +8,18 @@ int main()
     enable_logging("tree_dump/dump.html");
     srand(time(NULL));
 
-    INIT_TREE(node_root, 50, NULL, NULL);
+    INIT_TREE(test_tree);
 
     for (int i = 0; i < 10; i++)
     {
-        node_root = add_node(node_root, rand() % 100);
-        TREE_DUMP(node_root);
+        add_node(test_tree.root, rand() % 100);
+        TREE_DUMP(&test_tree);
     }
 
-    print_tree(node_root);
+    print_tree(test_tree.root);
     printf("\n");
 
-    tree_dtor(node_root);
+    tree_dtor(test_tree.root);
 
     disable_logging();
 

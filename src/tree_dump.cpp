@@ -9,7 +9,7 @@ static int make_tree_node(FILE* dot_file, node_t* tree);
 
 #define DOT_(...) fprintf(dot_file, __VA_ARGS__);
 
-err_code_t tree_dump(node_t* tree, const char * funcname, const char * filename, const int fileline)
+err_code_t tree_dump(my_tree_t* tree, const char * funcname, const char * filename, const int fileline)
 {
     assert(tree);
     assert(funcname);
@@ -23,7 +23,7 @@ err_code_t tree_dump(node_t* tree, const char * funcname, const char * filename,
          tree->rootname, tree, tree->funcname, tree->filename, tree->codeline);
 #endif
 
-    size_t tree_num = generate_dot_file(tree) - 1;
+    size_t tree_num = generate_dot_file(tree->root) - 1;
     LOG("<img src=img/%zd.png>\n", tree_num);
     LOG("End printing tree -----------------------------------------------------\n"
         "</pre>");

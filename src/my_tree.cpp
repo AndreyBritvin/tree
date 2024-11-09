@@ -17,8 +17,18 @@ node_t* new_node(tree_val_t data, node_t* left_node, node_t* right_node)
     return node;
 }
 
+err_code_t tree_ctor(my_tree_t* tree)
+{
+    tree->size = 1;
+    tree->root = new_node(0, NULL, NULL);
+
+    return OK;
+}
+
 err_code_t tree_dtor(node_t* tree)
 {
+    assert(tree);
+
     if (tree->left  != NULL) tree_dtor(tree->left);
     if (tree->right != NULL) tree_dtor(tree->right);
 
@@ -38,7 +48,7 @@ node_t* add_node(node_t* tree, tree_val_t data_to_add)
 
 err_code_t print_tree(node_t* tree)
 {
-    if (tree == NULL) return ERROR_TREE_IS_NULL;
+    if (tree == NULL) return ERROR_TREE_IS_NULL; // TODO: parse this error
 
     printf("(");
     if (tree->left  != NULL) print_tree(tree->left);
