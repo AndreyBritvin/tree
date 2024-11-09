@@ -2,21 +2,24 @@
 #include <assert.h>
 #include "my_log.h"
 #include <string.h>
+#include <stdarg.h>
 
-static err_code_t tree_dot          (char *filename, my_tree_t* tree, node_t* curr_node, const char * curr_action);
-static err_code_t make_tree_node    (FILE* dot_file, my_tree_t* tree, node_t* curr_node, const char * curr_action);
+static err_code_t tree_dot          (char *filename, my_tree_t* tree, node_t* curr_node, const char * curr_action, va_list args);
+static err_code_t make_tree_node    (FILE* dot_file, my_tree_t* tree, node_t* curr_node, const char * curr_action, va_list args);
 static int        make_node         (FILE* dot_file, node_t* curr_node, node_t* node_to_select, const char * curr_action);
-static size_t     generate_dot_file (my_tree_t* tree, node_t* curr_node, const char * curr_action);
+static size_t     generate_dot_file (my_tree_t* tree, node_t* curr_node, const char * curr_action, va_list args);
 static err_code_t generate_root_info(FILE* dot_file, my_tree_t* tree);
 
 #define DOT_(...) fprintf(dot_file, __VA_ARGS__);
 
-err_code_t tree_dump(my_tree_t* tree, node_t* curr_node, const char * curr_action DEBUG_INFO)
+err_code_t tree_dump(my_tree_t* tree, node_t* curr_node DEBUG_INFO, const char * curr_action, ...)
 {
     assert(tree);
     assert(funcname);
     assert(filename);
 
+    va_list args;
+    va_start(args, curr_action);
     LOG("<pre>\n"
         "Tree dump called from %s() in %s:%d for tree %p\n\n",
                         funcname, filename, fileline, tree);
@@ -24,16 +27,17 @@ err_code_t tree_dump(my_tree_t* tree, node_t* curr_node, const char * curr_actio
     LOG("Rootname = %s at [%p] created in %s() %s:%d\n\n",
          tree->rootname, tree, tree->funcname, tree->filename, tree->codeline);
 #endif
-
-    size_t tree_num = generate_dot_file(tree, curr_node, curr_action) - 1;
+    size_t tree_num = generate_dot_file(tree, curr_node, curr_action, args) - 1;
     LOG("<img src=img/%zd.png>\n", tree_num);
     LOG("End printing tree -----------------------------------------------------\n"
         "</pre>");
 
+    va_end(args);
+
     return OK;
 }
 
-size_t generate_dot_file(my_tree_t* tree, node_t* curr_node, const char * curr_action)
+size_t generate_dot_file(my_tree_t* tree, node_t* curr_node, const char * curr_action, va_list args)
 {
     assert(tree != NULL);
 
@@ -47,9 +51,9 @@ size_t generate_dot_file(my_tree_t* tree, node_t* curr_node, const char * curr_a
     sprintf(implementation, base_command, graphs_counter, graphs_counter);
     sprintf(txt_full_filename, txt_filename, graphs_counter);
 
-    printf("File to create:  %s\n", txt_full_filename);
-    printf("Command to call: %s\n", implementation);
-    tree_dot(txt_full_filename, tree, curr_node, curr_action);
+    // printf("File to create:  %s\n", txt_full_filename);
+    // printf("Command to call: %s\n", implementation);
+    tree_dot(txt_full_filename, tree, curr_node, curr_action, args);
     system(implementation);
 
     free(implementation);
@@ -60,7 +64,7 @@ size_t generate_dot_file(my_tree_t* tree, node_t* curr_node, const char * curr_a
     return graphs_counter;
 }
 
-err_code_t tree_dot(char *filename, my_tree_t* tree, node_t* curr_node, const char * curr_action)
+err_code_t tree_dot(char *filename, my_tree_t* tree, node_t* curr_node, const char * curr_action, va_list args)
 {
     assert(filename != NULL);
 
@@ -70,7 +74,7 @@ err_code_t tree_dot(char *filename, my_tree_t* tree, node_t* curr_node, const ch
          "rankdir = TB;\n");
 
     generate_root_info(dot_file, tree);
-    make_tree_node(dot_file, tree, curr_node, curr_action);
+    make_tree_node(dot_file, tree, curr_node, curr_action, args);
 
     DOT_("}\n");
 
@@ -87,11 +91,15 @@ err_code_t generate_root_info(FILE* dot_file, my_tree_t* tree)
     return OK;
 }
 
-err_code_t make_tree_node(FILE* dot_file, my_tree_t* tree, node_t* curr_node, const char * curr_action)
+err_code_t make_tree_node(FILE* dot_file, my_tree_t* tree, node_t* curr_node, const char * curr_action, va_list args)
 {
     assert(tree);
 
-    make_node(dot_file, tree->root,  curr_node, curr_action);
+    char *formatted_action = (char *) calloc(strlen(curr_action) + 100, sizeof(char));
+    vsprintf(formatted_action, curr_action, args);
+
+    make_node(dot_file, tree->root, curr_node, formatted_action);
+    free(formatted_action);
 
     return OK;
 }
@@ -105,12 +113,14 @@ err_code_t make_node(FILE* dot_file, node_t* curr_node, node_t* node_to_select, 
     const char *node_color = "saddlebrown";
     if (curr_node == node_to_select)
     {
-        node_color = "saddlebrown, style=\"filled\", fillcolor = \"#d9b986\"";
-        DOT_("info_node[shape = Mrecord, style = \"filled\", fillcolor = yellow, label = \"%s\", constraint = false];\n", curr_action);
+        node_color = "saddlebrown, style=\"filled\", fillcolor = \"yellow\""; // #d9b986
+        DOT_("info_node[shape = Mrecord, style = \"filled\", fillcolor = yellow, label = \"");
+        DOT_("%s", curr_action);
+        DOT_("\", constraint = false];\n");
         DOT_("info_node->tree%p;", curr_node);
     }
 
-    DOT_("tree%p[shape = record; label = \"{addr = %p |data = %d| {<l%p> left | <r%p> right}}\"; color = %s];\n",
+    DOT_("tree%p[shape = record; label = \"{addr = %p |data = %d| {<l%p> left | <r%p> right color}}\"; color = %s];\n",
                                 curr_node, curr_node, curr_node->data, curr_node, curr_node, node_color);
 
     if (curr_node->left != NULL)

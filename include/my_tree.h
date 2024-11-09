@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include "utils.h"
 #include <stdio.h>
-
-#define TREE_DUMP(tree_to_dump, curr_node, action) \
-        tree_dump(tree_to_dump, curr_node, action, __func__, __FILE__, __LINE__);
+#include <stdarg.h>
 
 #ifndef NDEBUG
+    #define TREE_DUMP(tree_to_dump, curr_node, ...) \
+        tree_dump(tree_to_dump, curr_node, __func__, __FILE__, __LINE__, __VA_ARGS__);
     #define DEBUG_INFO , const char * funcname, const char * filename, const int fileline
     #define INIT_TREE(tree_name) my_tree_t tree_name = {};  tree_ctor(&tree_name);                     \
                                                             tree_name.rootname = #tree_name;           \
@@ -15,6 +15,8 @@
                                                             tree_name.filename = __FILE__;             \
                                                             tree_name.codeline = __LINE__;
 #else
+    #define TREE_DUMP(tree_to_dump, curr_node, action) \
+        tree_dump(tree_to_dump, curr_node, action);
     #define DEBUG_INFO
     #define INIT_TREE(tree_name) my_tree_t tree_name = {};  tree_ctor(&tree_name);
 #endif // NDEBUG
@@ -49,7 +51,7 @@ err_code_t tree_dtor (node_t* tree);
 err_code_t print_tree(node_t* tree);
 err_code_t add_node(my_tree_t *tree, tree_val_t data_to_add);
 
-err_code_t tree_dump(my_tree_t* tree, node_t* curr_node, const char * curr_action DEBUG_INFO);
+err_code_t tree_dump(my_tree_t* tree, node_t* curr_node DEBUG_INFO, const char * curr_action, ...);
 err_code_t verificator(node_t* tree, size_t recurs_level);
 
 #endif // MY_TREE_H_

@@ -25,5 +25,7 @@ run:
 	./tree.out
 
 clean:
+	rm -rf build
+	mkdir build
 	rm tree.out
 

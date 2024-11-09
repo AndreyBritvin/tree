@@ -51,11 +51,11 @@ static node_t* add_node_by_root(my_tree_t* tree, node_t* curr_node, tree_val_t d
 {
     if (curr_node == NULL) return new_node(data_to_add, NULL, NULL);
 
-    char *string_to_format = "Comparing data node.data = %d with data_to_add = %d";
-    char *formatted_string = (char *) calloc(strlen(string_to_format) + 20, sizeof(char));
-    sprintf(formatted_string, string_to_format, curr_node->data, data_to_add);
-    TREE_DUMP(tree, curr_node, formatted_string);
-    free(formatted_string);
+    // char *string_to_format = "Comparing data node.data = %d with data_to_add = %d";
+    // char *formatted_string = (char *) calloc(strlen(string_to_format) + 20, sizeof(char));
+    // sprintf(formatted_string, string_to_format, curr_node->data, data_to_add);
+    TREE_DUMP(tree, curr_node, "Comparing data node.data = %d with data_to_add = %d", curr_node->data, data_to_add);
+    // free(formatted_string);
 
     if (curr_node->data < data_to_add) curr_node->right = add_node_by_root(tree, curr_node->right, data_to_add);
     else                               curr_node->left  = add_node_by_root(tree, curr_node->left,  data_to_add);
