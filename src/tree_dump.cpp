@@ -3,13 +3,13 @@
 #include "my_log.h"
 #include <string.h>
 
-static err_code_t tree_dot(char *filename, node_t *tree);
-static size_t generate_dot_file(node_t* tree);
-static int make_tree_node(FILE* dot_file, node_t* tree);
+static err_code_t tree_dot         (char *filename, my_tree_t* tree, node_t* curr_node, const char * curr_action);
+static size_t     generate_dot_file(my_tree_t* tree, node_t* curr_node, const char * curr_action);
+static int        make_tree_node   (FILE* dot_file, node_t* tree);
 
 #define DOT_(...) fprintf(dot_file, __VA_ARGS__);
 
-err_code_t tree_dump(my_tree_t* tree, const char * funcname, const char * filename, const int fileline)
+err_code_t tree_dump(my_tree_t* tree, node_t* curr_node, const char * curr_action DEBUG_INFO)
 {
     assert(tree);
     assert(funcname);
@@ -23,7 +23,7 @@ err_code_t tree_dump(my_tree_t* tree, const char * funcname, const char * filena
          tree->rootname, tree, tree->funcname, tree->filename, tree->codeline);
 #endif
 
-    size_t tree_num = generate_dot_file(tree->root) - 1;
+    size_t tree_num = generate_dot_file(tree, curr_node, curr_action) - 1;
     LOG("<img src=img/%zd.png>\n", tree_num);
     LOG("End printing tree -----------------------------------------------------\n"
         "</pre>");
@@ -31,7 +31,7 @@ err_code_t tree_dump(my_tree_t* tree, const char * funcname, const char * filena
     return OK;
 }
 
-size_t generate_dot_file(node_t* tree)
+size_t generate_dot_file(my_tree_t* tree, node_t* curr_node, const char * curr_action)
 {
     assert(tree != NULL);
 
@@ -47,7 +47,7 @@ size_t generate_dot_file(node_t* tree)
 
     printf("File to create:  %s\n", txt_full_filename);
     printf("Command to call: %s\n", implementation);
-    tree_dot(txt_full_filename, tree);
+    tree_dot(txt_full_filename, tree, curr_node, curr_action);
     system(implementation);
 
     free(implementation);
@@ -58,7 +58,7 @@ size_t generate_dot_file(node_t* tree)
     return graphs_counter;
 }
 
-err_code_t tree_dot(char *filename, node_t *tree)
+err_code_t tree_dot(char *filename, my_tree_t* tree, node_t* curr_node, const char * curr_action)
 {
     assert(filename != NULL);
 
@@ -67,7 +67,7 @@ err_code_t tree_dot(char *filename, node_t *tree)
     DOT_("digraph{\n"
          "rankdir = TB;\n");
 
-    make_tree_node(dot_file, tree);
+    make_tree_node(dot_file, tree->root);
 
     DOT_("}\n");
 

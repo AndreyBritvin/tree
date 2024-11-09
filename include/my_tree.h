@@ -4,15 +4,18 @@
 #include "utils.h"
 #include <stdio.h>
 
-#define TREE_DUMP(tree_to_dump) tree_dump(tree_to_dump, __func__, __FILE__, __LINE__);
+#define TREE_DUMP(tree_to_dump, curr_node, action) \
+        tree_dump(tree_to_dump, curr_node, action, __func__, __FILE__, __LINE__);
 
 #ifndef NDEBUG
+    #define DEBUG_INFO , const char * funcname, const char * filename, const int fileline
     #define INIT_TREE(tree_name) my_tree_t tree_name = {};  tree_ctor(&tree_name);                     \
                                                             tree_name.rootname = #tree_name;           \
                                                             tree_name.funcname = __func__;             \
                                                             tree_name.filename = __FILE__;             \
                                                             tree_name.codeline = __LINE__;
 #else
+    #define DEBUG_INFO
     #define INIT_TREE(tree_name) my_tree_t tree_name = {};  tree_ctor(&tree_name);
 #endif // NDEBUG
 
@@ -46,7 +49,7 @@ err_code_t tree_dtor (node_t* tree);
 err_code_t print_tree(node_t* tree);
 node_t* add_node(node_t* tree, tree_val_t data_to_add);
 
-err_code_t tree_dump(my_tree_t* tree, const char * funcname, const char * filename, const int fileline);
+err_code_t tree_dump(my_tree_t* tree, node_t* curr_node, const char * curr_action DEBUG_INFO);
 err_code_t verificator(node_t* tree, size_t recurs_level);
 
 #endif // MY_TREE_H_
