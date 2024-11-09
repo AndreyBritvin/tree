@@ -12,8 +12,8 @@ int main()
 
     for (int i = 0; i < 10; i++)
     {
-        add_node(test_tree.root, rand() % 100);
-        TREE_DUMP(&test_tree, test_tree.root, "Inserted to this root");
+        add_node(&test_tree, rand() % 100);
+        TREE_DUMP(&test_tree, test_tree.root, "Inserting to this root");
     }
 
     print_tree(test_tree.root);

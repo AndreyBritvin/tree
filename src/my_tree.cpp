@@ -6,6 +6,8 @@
 #include <assert.h>
 #include "my_log.h"
 
+static node_t* add_node_by_root(my_tree_t* tree, node_t* curr_node, tree_val_t data_to_add);
+
 node_t* new_node(tree_val_t data, node_t* left_node, node_t* right_node)
 {
     node_t* node = (node_t*) calloc(1, sizeof(node_t));
@@ -37,13 +39,28 @@ err_code_t tree_dtor(node_t* tree)
     return OK;
 }
 
-node_t* add_node(node_t* tree, tree_val_t data_to_add)
+err_code_t add_node(my_tree_t *tree, tree_val_t data_to_add)
 {
-    if (tree == NULL) return new_node(data_to_add, NULL, NULL);
-    if (tree->data < data_to_add) tree->right = add_node(tree->right, data_to_add);
-    else                          tree->left  = add_node(tree->left,  data_to_add);
+    add_node_by_root(tree, tree->root, data_to_add);
+    tree->size += 1;
 
-    return tree;
+    return OK;
+}
+
+static node_t* add_node_by_root(my_tree_t* tree, node_t* curr_node, tree_val_t data_to_add)
+{
+    if (curr_node == NULL) return new_node(data_to_add, NULL, NULL);
+
+    char *string_to_format = "Comparing data node.data = %d with data_to_add = %d";
+    char *formatted_string = (char *) calloc(strlen(string_to_format) + 20, sizeof(char));
+    sprintf(formatted_string, string_to_format, curr_node->data, data_to_add);
+    TREE_DUMP(tree, curr_node, formatted_string);
+    free(formatted_string);
+
+    if (curr_node->data < data_to_add) curr_node->right = add_node_by_root(tree, curr_node->right, data_to_add);
+    else                               curr_node->left  = add_node_by_root(tree, curr_node->left,  data_to_add);
+
+    return curr_node;
 }
 
 err_code_t print_tree(node_t* tree)

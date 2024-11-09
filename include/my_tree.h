@@ -47,7 +47,7 @@ err_code_t tree_ctor(my_tree_t* tree);
 err_code_t tree_dtor (node_t* tree);
 
 err_code_t print_tree(node_t* tree);
-node_t* add_node(node_t* tree, tree_val_t data_to_add);
+err_code_t add_node(my_tree_t *tree, tree_val_t data_to_add);
 
 err_code_t tree_dump(my_tree_t* tree, node_t* curr_node, const char * curr_action DEBUG_INFO);
 err_code_t verificator(node_t* tree, size_t recurs_level);

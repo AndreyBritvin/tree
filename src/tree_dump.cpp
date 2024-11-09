@@ -3,9 +3,11 @@
 #include "my_log.h"
 #include <string.h>
 
-static err_code_t tree_dot         (char *filename, my_tree_t* tree, node_t* curr_node, const char * curr_action);
-static size_t     generate_dot_file(my_tree_t* tree, node_t* curr_node, const char * curr_action);
-static int        make_tree_node   (FILE* dot_file, node_t* tree);
+static err_code_t tree_dot          (char *filename, my_tree_t* tree, node_t* curr_node, const char * curr_action);
+static err_code_t make_tree_node    (FILE* dot_file, my_tree_t* tree, node_t* curr_node, const char * curr_action);
+static int        make_node         (FILE* dot_file, node_t* curr_node, node_t* node_to_select, const char * curr_action);
+static size_t     generate_dot_file (my_tree_t* tree, node_t* curr_node, const char * curr_action);
+static err_code_t generate_root_info(FILE* dot_file, my_tree_t* tree);
 
 #define DOT_(...) fprintf(dot_file, __VA_ARGS__);
 
@@ -67,7 +69,8 @@ err_code_t tree_dot(char *filename, my_tree_t* tree, node_t* curr_node, const ch
     DOT_("digraph{\n"
          "rankdir = TB;\n");
 
-    make_tree_node(dot_file, tree->root);
+    generate_root_info(dot_file, tree);
+    make_tree_node(dot_file, tree, curr_node, curr_action);
 
     DOT_("}\n");
 
@@ -76,23 +79,49 @@ err_code_t tree_dot(char *filename, my_tree_t* tree, node_t* curr_node, const ch
     return OK;
 }
 
-err_code_t make_tree_node(FILE* dot_file, node_t* tree)
+err_code_t generate_root_info(FILE* dot_file, my_tree_t* tree)
 {
-    assert(dot_file != NULL);
-    assert(tree     != NULL);
+    DOT_("root[shape = Mrecord; label = \"{Tree at %p|Tree size = %zd|<r1> Root at %p}\" color = chocolate]\n", tree, tree->size, tree->root);
+    DOT_("root->tree%p [color = brown];\n", tree->root);
 
-    DOT_("tree%p[shape = record; label = \"{addr = %p |data = %d| {<l%p> left | <r%p> right}}\"];\n",
-                                tree, tree, tree->data, tree, tree);
+    return OK;
+}
 
-    if (tree->left != NULL)
+err_code_t make_tree_node(FILE* dot_file, my_tree_t* tree, node_t* curr_node, const char * curr_action)
+{
+    assert(tree);
+
+    make_node(dot_file, tree->root,  curr_node, curr_action);
+
+    return OK;
+}
+
+err_code_t make_node(FILE* dot_file, node_t* curr_node, node_t* node_to_select, const char * curr_action)
+{
+    assert(curr_node);
+    assert(dot_file);
+    assert(curr_action);
+
+    const char *node_color = "saddlebrown";
+    if (curr_node == node_to_select)
     {
-        make_tree_node(dot_file, tree->left);
-        DOT_("tree%p:<l%p>:s->tree%p;\n", tree, tree, tree->left)
+        node_color = "saddlebrown, style=\"filled\", fillcolor = \"#d9b986\"";
+        DOT_("info_node[shape = Mrecord, style = \"filled\", fillcolor = yellow, label = \"%s\", constraint = false];\n", curr_action);
+        DOT_("info_node->tree%p;", curr_node);
     }
-    if (tree->right != NULL)
+
+    DOT_("tree%p[shape = record; label = \"{addr = %p |data = %d| {<l%p> left | <r%p> right}}\"; color = %s];\n",
+                                curr_node, curr_node, curr_node->data, curr_node, curr_node, node_color);
+
+    if (curr_node->left != NULL)
     {
-        make_tree_node(dot_file, tree->right);
-        DOT_("tree%p:<r%p:s>->tree%p;\n", tree, tree, tree->right)
+        make_node(dot_file, curr_node->left, node_to_select, curr_action);
+        DOT_("tree%p:<l%p>:s->tree%p;\n", curr_node, curr_node, curr_node->left)
+    }
+    if (curr_node->right != NULL)
+    {
+        make_node(dot_file, curr_node->right, node_to_select, curr_action);
+        DOT_("tree%p:<r%p:s>->tree%p;\n", curr_node, curr_node, curr_node->right)
     }
 
     return OK;
