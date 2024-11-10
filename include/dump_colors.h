@@ -6,7 +6,7 @@
 #define ROOT_SHAPE_COLOR     "chocolate"
 #define DEFAULT_SHAPE_COLOR  "saddlebrown"
 #define DEFAULT_EDGE_COLOR   "green"
-#define DEFAULT_BAD_EDGE     "red"
+#define BAD_EDGE_COLOR       "red"
 #define ROOT_INFO_EDGE_COLOR "brown"
 
 #endif // DUMP_COLORS_H_

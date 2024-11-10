@@ -53,6 +53,6 @@ err_code_t add_node(my_tree_t *tree, tree_val_t data_to_add);
 
 err_code_t paste_instruction();
 err_code_t tree_dump(my_tree_t* tree, node_t* curr_node DEBUG_INFO, const char * curr_action, ...);
-err_code_t verificator(node_t* tree, size_t recurs_level);
+err_code_t verificator(my_tree_t* tree, node_t* node, size_t recurs_level);
 
 #endif // MY_TREE_H_

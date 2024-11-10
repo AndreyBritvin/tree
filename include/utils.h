@@ -22,6 +22,7 @@ enum errors
     ERROR_FILE,
     ERROR_TREE_IS_NULL,
     ERROR_TREE_LOOPED,
+    ERROR_PARENT_DONT_MATCH,
 };
 
 #endif //UTILS_H_

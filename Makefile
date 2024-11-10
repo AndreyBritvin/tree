@@ -10,7 +10,7 @@ BUILD_FILES   = $(wildcard build/*.o)
 all: tree.out
 
 tree.out:$(SRC_FILES) $(BUILD_FILES)
-	$(CC) $(CFLAGS) $(INCLUDE) $(SRC_FILES) My_logging_system/build/my_log.o -o tree.out
+	@$(CC) $(CFLAGS) $(INCLUDE) $(SRC_FILES) My_logging_system/build/my_log.o -o tree.out
 
 #
 # tree.out: build/main.o build/my_tree.o My_logging_system/build/my_log.o build/tree_dump.o

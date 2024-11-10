@@ -7,7 +7,7 @@
 
 static err_code_t tree_dot          (char *filename, my_tree_t* tree, node_t* curr_node, const char * curr_action, va_list args);
 static err_code_t make_tree_node    (FILE* dot_file, my_tree_t* tree, node_t* curr_node, const char * curr_action, va_list args);
-static int        make_node         (FILE* dot_file, node_t* curr_node, node_t* node_to_select, const char * curr_action);
+static int        make_node         (FILE* dot_file, node_t* curr_node, node_t* node_to_select, const char * curr_action, size_t recurs_level, size_t max_recurs);
 static size_t     generate_dot_file (my_tree_t* tree, node_t* curr_node, const char * curr_action, va_list args);
 static err_code_t generate_root_info(FILE* dot_file, my_tree_t* tree);
 static err_code_t init_graph        (FILE* dot_file);
@@ -107,17 +107,22 @@ err_code_t make_tree_node(FILE* dot_file, my_tree_t* tree, node_t* curr_node, co
     char *formatted_action = (char *) calloc(strlen(curr_action) + 100, sizeof(char));
     vsprintf(formatted_action, curr_action, args);
 
-    make_node(dot_file, tree->root, curr_node, formatted_action);
+    make_node(dot_file, tree->root, curr_node, formatted_action, 0, tree->size);
     free(formatted_action);
 
     return OK;
 }
 
-err_code_t make_node(FILE* dot_file, node_t* curr_node, node_t* node_to_select, const char * curr_action)
+err_code_t make_node(FILE* dot_file, node_t* curr_node, node_t* node_to_select, const char * curr_action, size_t recurs_level, size_t max_recurs)
 {
     // assert(curr_node);
     assert(dot_file);
     assert(curr_action);
+
+    if (recurs_level > max_recurs)
+    {
+        return ERROR_TREE_LOOPED;
+    }
 
     const char *fill_color = "";
     const char *shape_color = "";
@@ -139,18 +144,35 @@ err_code_t make_node(FILE* dot_file, node_t* curr_node, node_t* node_to_select, 
         shape_color = DEFAULT_SHAPE_COLOR;
     }
 
-    DOT_("tree%p[shape = record; label = \"{addr = %p |data = %d| {<l%p> left | <r%p> right}}\"; color = %s %s];\n",
-                                curr_node, curr_node, curr_node->data, curr_node, curr_node, shape_color, fill_color);
+    DOT_("tree%p[shape = record; label = \"{<p> parent = %p|addr = %p |data = %d| {<l> left | <r> right}}\"; color = %s %s];\n",
+                                curr_node, curr_node->parent, curr_node, curr_node->data, shape_color, fill_color);
+
+    const char* edge_color = DEFAULT_EDGE_COLOR;
 
     if (curr_node->left != NULL)
     {
-        make_node(dot_file, curr_node->left, node_to_select, curr_action);
-        DOT_("tree%p:<l%p>:s->tree%p;\n", curr_node, curr_node, curr_node->left)
+        make_node(dot_file, curr_node->left, node_to_select, curr_action, recurs_level + 1, max_recurs);
+
+        if (curr_node->left->parent != curr_node)
+        {
+            edge_color = BAD_EDGE_COLOR;
+            if (curr_node->left->parent == NULL) DOT_("NULL_PTR:<p>:n->tree%p [color=%s];\n", curr_node, edge_color)
+            else                                 DOT_("tree%p:<p>:n->tree%p [color=%s];\n", curr_node->left->parent, curr_node, edge_color)
+        }
+        DOT_("tree%p:<l>:s->tree%p [color=%s];\n", curr_node, curr_node->left, edge_color)
     }
+
+    edge_color = DEFAULT_EDGE_COLOR;
     if (curr_node->right != NULL)
     {
-        make_node(dot_file, curr_node->right, node_to_select, curr_action);
-        DOT_("tree%p:<r%p:s>->tree%p;\n", curr_node, curr_node, curr_node->right)
+        make_node(dot_file, curr_node->right, node_to_select, curr_action, recurs_level + 1, max_recurs);
+        if (curr_node->right->parent != curr_node)
+        {
+            edge_color = BAD_EDGE_COLOR;
+            if (curr_node->right->parent == NULL) DOT_("NULL_PTR:<p>:n->tree%p [color=%s];\n", curr_node, edge_color)
+            else DOT_("tree%p:<p>:n->tree%p [color=%s];\n", curr_node->right->parent, curr_node, edge_color)
+        }
+        DOT_("tree%p:<r>:s->tree%p [color = %s];\n", curr_node, curr_node->right, edge_color)
     }
 
     return OK;
@@ -171,8 +193,8 @@ err_code_t paste_instruction()
         "<img src=img/instruction.png>"
         "</pre>");
 
-    DOT_("test_tree1 [shape = record; label = \"{addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; color = " DEFAULT_SHAPE_COLOR "];\n");
-    DOT_("test_tree2 [shape = record; label = \"{addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; color = " ENDING_LEAVES_TREE ", style=filled, fillcolor = " CURRENT_NODE_COLOR "];\n");
+    DOT_("test_tree1 [shape = record; label = \"{parent=addr|addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; color = " DEFAULT_SHAPE_COLOR "];\n");
+    DOT_("test_tree2 [shape = record; label = \"{parent=addr|addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; color = " ENDING_LEAVES_TREE ", style=filled, fillcolor = " CURRENT_NODE_COLOR "];\n");
     DOT_("root[shape = Mrecord; label = \"{Tree at tree_addr|Tree size = ...|<r1> Root at ADDR}\" color = " ROOT_SHAPE_COLOR "]\n");
     DOT_("info_to_color1[shape=Mrecord, label=\"This rounded form indicates that its additional information\"];\n")
     DOT_("info_to_color2[shape=Mrecord, label=\"{" CURRENT_NODE_COLOR " color means current node| " ENDING_LEAVES_TREE " color means ending of tree}\", style=filled, fillcolor=" CURRENT_NODE_COLOR "];\n");
