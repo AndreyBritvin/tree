@@ -3,12 +3,14 @@
 #include "my_log.h"
 #include <string.h>
 #include <stdarg.h>
+#include <dump_colors.h>
 
 static err_code_t tree_dot          (char *filename, my_tree_t* tree, node_t* curr_node, const char * curr_action, va_list args);
 static err_code_t make_tree_node    (FILE* dot_file, my_tree_t* tree, node_t* curr_node, const char * curr_action, va_list args);
 static int        make_node         (FILE* dot_file, node_t* curr_node, node_t* node_to_select, const char * curr_action);
 static size_t     generate_dot_file (my_tree_t* tree, node_t* curr_node, const char * curr_action, va_list args);
 static err_code_t generate_root_info(FILE* dot_file, my_tree_t* tree);
+static err_code_t init_graph        (FILE* dot_file);
 
 #define DOT_(...) fprintf(dot_file, __VA_ARGS__);
 
@@ -70,8 +72,7 @@ err_code_t tree_dot(char *filename, my_tree_t* tree, node_t* curr_node, const ch
 
     FILE * SAFE_OPEN_FILE(dot_file, filename, "w");
 
-    DOT_("digraph{\n"
-         "rankdir = TB;\n");
+    init_graph(dot_file);
 
     generate_root_info(dot_file, tree);
     make_tree_node(dot_file, tree, curr_node, curr_action, args);
@@ -83,10 +84,18 @@ err_code_t tree_dot(char *filename, my_tree_t* tree, node_t* curr_node, const ch
     return OK;
 }
 
+static err_code_t init_graph(FILE* dot_file)
+{
+    DOT_("digraph{\n"
+         "rankdir = TB;\n");
+
+    return OK;
+}
+
 err_code_t generate_root_info(FILE* dot_file, my_tree_t* tree)
 {
-    DOT_("root[shape = Mrecord; label = \"{Tree at %p|Tree size = %zd|<r1> Root at %p}\" color = chocolate]\n", tree, tree->size, tree->root);
-    DOT_("root->tree%p [color = brown];\n", tree->root);
+    DOT_("root[shape = Mrecord; label = \"{Tree at %p|Tree size = %zd|<r1> Root at %p}\" color = " ROOT_SHAPE_COLOR "]\n", tree, tree->size, tree->root);
+    DOT_("root->tree%p [color = " ROOT_INFO_EDGE_COLOR "];\n", tree->root);
 
     return OK;
 }
@@ -106,22 +115,32 @@ err_code_t make_tree_node(FILE* dot_file, my_tree_t* tree, node_t* curr_node, co
 
 err_code_t make_node(FILE* dot_file, node_t* curr_node, node_t* node_to_select, const char * curr_action)
 {
-    assert(curr_node);
+    // assert(curr_node);
     assert(dot_file);
     assert(curr_action);
 
-    const char *node_color = "saddlebrown";
+    const char *fill_color = "";
+    const char *shape_color = "";
     if (curr_node == node_to_select)
     {
-        node_color = "saddlebrown, style=\"filled\", fillcolor = \"yellow\""; // #d9b986
-        DOT_("info_node[shape = Mrecord, style = \"filled\", fillcolor = yellow, label = \"");
+        // shape_color = "shape";
+        fill_color = ", style=\"filled\", fillcolor = \"" CURRENT_NODE_COLOR "\""; // #d9b986
+        DOT_("info_node[shape = Mrecord, style = \"filled\", fillcolor = " CURRENT_NODE_COLOR ", label = \"");
         DOT_("%s", curr_action);
         DOT_("\", constraint = false];\n");
         DOT_("info_node->tree%p;", curr_node);
     }
+    if (curr_node->left == NULL && curr_node->right == NULL)
+    {
+        shape_color = ENDING_LEAVES_TREE;
+    }
+    else
+    {
+        shape_color = DEFAULT_SHAPE_COLOR;
+    }
 
-    DOT_("tree%p[shape = record; label = \"{addr = %p |data = %d| {<l%p> left | <r%p> right color}}\"; color = %s];\n",
-                                curr_node, curr_node, curr_node->data, curr_node, curr_node, node_color);
+    DOT_("tree%p[shape = record; label = \"{addr = %p |data = %d| {<l%p> left | <r%p> right}}\"; color = %s %s];\n",
+                                curr_node, curr_node, curr_node->data, curr_node, curr_node, shape_color, fill_color);
 
     if (curr_node->left != NULL)
     {
@@ -133,6 +152,36 @@ err_code_t make_node(FILE* dot_file, node_t* curr_node, node_t* node_to_select, 
         make_node(dot_file, curr_node->right, node_to_select, curr_action);
         DOT_("tree%p:<r%p:s>->tree%p;\n", curr_node, curr_node, curr_node->right)
     }
+
+    return OK;
+}
+
+err_code_t paste_instruction()
+{
+
+    const char *txt_filename = "tree_dump/dot/instruction.dot";
+    const char *base_command = "dot tree_dump/dot/instruction.dot -o tree_dump/img/instruction.png -Tpng";
+
+    FILE * SAFE_OPEN_FILE(dot_file, txt_filename, "w");
+    // printf("File to create:  %s\n", txt_full_filename);
+    // printf("Command to call: %s\n", implementation);
+    init_graph(dot_file);
+    LOG("<pre>\n"
+        "This is example for tree dump.\n"
+        "<img src=img/instruction.png>"
+        "</pre>");
+
+    DOT_("test_tree1 [shape = record; label = \"{addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; color = " DEFAULT_SHAPE_COLOR "];\n");
+    DOT_("test_tree2 [shape = record; label = \"{addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; color = " ENDING_LEAVES_TREE ", style=filled, fillcolor = " CURRENT_NODE_COLOR "];\n");
+    DOT_("root[shape = Mrecord; label = \"{Tree at tree_addr|Tree size = ...|<r1> Root at ADDR}\" color = " ROOT_SHAPE_COLOR "]\n");
+    DOT_("info_to_color1[shape=Mrecord, label=\"This rounded form indicates that its additional information\"];\n")
+    DOT_("info_to_color2[shape=Mrecord, label=\"{" CURRENT_NODE_COLOR " color means current node| " ENDING_LEAVES_TREE " color means ending of tree}\", style=filled, fillcolor=" CURRENT_NODE_COLOR "];\n");
+    DOT_("root->test_tree1->test_tree2;\n")
+    DOT_("info_to_color1->root; info_to_color2->test_tree2;\n")
+    DOT_("}");
+    fclose(dot_file);
+
+    system(base_command);
 
     return OK;
 }

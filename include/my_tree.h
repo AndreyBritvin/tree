@@ -43,7 +43,7 @@ struct my_tree_t
 #endif
 };
 
-node_t* new_node(tree_val_t data, node_t* left_node, node_t* right_node);
+node_t* new_node(my_tree_t tree, tree_val_t data, node_t* left_node, node_t* right_node);
 
 err_code_t tree_ctor(my_tree_t* tree);
 err_code_t tree_dtor (node_t* tree);
@@ -51,6 +51,7 @@ err_code_t tree_dtor (node_t* tree);
 err_code_t print_tree(node_t* tree);
 err_code_t add_node(my_tree_t *tree, tree_val_t data_to_add);
 
+err_code_t paste_instruction();
 err_code_t tree_dump(my_tree_t* tree, node_t* curr_node DEBUG_INFO, const char * curr_action, ...);
 err_code_t verificator(node_t* tree, size_t recurs_level);
 

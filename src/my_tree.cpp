@@ -8,7 +8,7 @@
 
 static node_t* add_node_by_root(my_tree_t* tree, node_t* curr_node, tree_val_t data_to_add);
 
-node_t* new_node(tree_val_t data, node_t* left_node, node_t* right_node)
+node_t* new_node(my_tree_t* tree, tree_val_t data, node_t* left_node, node_t* right_node)
 {
     node_t* node = (node_t*) calloc(1, sizeof(node_t));
 
@@ -22,7 +22,7 @@ node_t* new_node(tree_val_t data, node_t* left_node, node_t* right_node)
 err_code_t tree_ctor(my_tree_t* tree)
 {
     tree->size = 1;
-    tree->root = new_node(0, NULL, NULL);
+    tree->root = new_node(tree, 0, NULL, NULL);
 
     return OK;
 }
@@ -41,26 +41,33 @@ err_code_t tree_dtor(node_t* tree)
 
 err_code_t add_node(my_tree_t *tree, tree_val_t data_to_add)
 {
-    add_node_by_root(tree, tree->root, data_to_add);
+    node_t* appended_node = add_node_by_root(tree, tree->root, data_to_add);
     tree->size += 1;
+
+    TREE_DUMP(tree, appended_node, "Added this node");
 
     return OK;
 }
 
 static node_t* add_node_by_root(my_tree_t* tree, node_t* curr_node, tree_val_t data_to_add)
 {
-    if (curr_node == NULL) return new_node(data_to_add, NULL, NULL);
+    if (curr_node == NULL) return new_node(tree, data_to_add, NULL, NULL);
 
-    // char *string_to_format = "Comparing data node.data = %d with data_to_add = %d";
-    // char *formatted_string = (char *) calloc(strlen(string_to_format) + 20, sizeof(char));
-    // sprintf(formatted_string, string_to_format, curr_node->data, data_to_add);
     TREE_DUMP(tree, curr_node, "Comparing data node.data = %d with data_to_add = %d", curr_node->data, data_to_add);
-    // free(formatted_string);
 
-    if (curr_node->data < data_to_add) curr_node->right = add_node_by_root(tree, curr_node->right, data_to_add);
-    else                               curr_node->left  = add_node_by_root(tree, curr_node->left,  data_to_add);
+    node_t*node_to_return = NULL;
+    if (curr_node->data < data_to_add)
+    {
+        node_to_return = add_node_by_root(tree, curr_node->right, data_to_add);
+        if (curr_node->right == NULL) curr_node->right = node_to_return;
+    }
+    else
+    {
+        node_to_return = add_node_by_root(tree, curr_node->left, data_to_add);
+        if (curr_node->left == NULL) curr_node->left = node_to_return;
+    }
 
-    return curr_node;
+    return node_to_return;
 }
 
 err_code_t print_tree(node_t* tree)

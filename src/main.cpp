@@ -6,6 +6,7 @@
 int main()
 {
     enable_logging("tree_dump/dump.html");
+    paste_instruction();
     srand(time(NULL));
 
     INIT_TREE(test_tree);
