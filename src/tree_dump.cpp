@@ -130,7 +130,7 @@ err_code_t make_node(FILE* dot_file, node_t* curr_node, node_t* node_to_select, 
     if (curr_node == node_to_select)
     {
         // shape_color = "shape";
-        shape_color = ", color = \"" CURRENT_NODE_COLOR "\""; // #d9b986
+        shape_color = ", color = \"" CURRENT_NODE_SHAPE_COLOR "\"" "; penwidth=3;"; // #d9b986
         DOT_("info_node[shape = Mrecord, style = \"filled\", fillcolor = " CURRENT_NODE_COLOR ", label = \"");
         DOT_("%s", curr_action);
         DOT_("\", constraint = false];\n");
@@ -197,12 +197,13 @@ err_code_t paste_instruction()
         "<img src=img/instruction.png>"
         "</pre>");
 
-    DOT_("test_tree1 [shape = record; label = \"{parent=addr|addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; color = \"" DEFAULT_SHAPE_COLOR "\"];\n");
-    DOT_("test_tree2 [shape = record; label = \"{parent=addr|addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; color = \"" ENDING_LEAVES_TREE "\", style=filled, fillcolor = " CURRENT_NODE_COLOR "];\n");
+    DOT_("test_tree1 [shape = record; label = \"{parent=addr|addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; fillcolor = \"" DEFAULT_SHAPE_COLOR "\", style=filled];\n");
+    DOT_("test_tree2 [shape = record; label = \"{parent=addr|addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; penwidth=2.5; fillcolor = \"" ENDING_LEAVES_TREE "\" , style=filled, color = " CURRENT_NODE_SHAPE_COLOR "];\n");
     DOT_("root[shape = Mrecord; label = \"{Tree at tree_addr|Tree size = ...|<r1> Root at ADDR}\" color = \"" ROOT_SHAPE_COLOR "\"]\n");
     DOT_("info_to_color1[shape=Mrecord, label=\"This rounded form indicates that its additional information\"];\n")
     DOT_("info_to_color2[shape=Mrecord, label=\"{" CURRENT_NODE_COLOR " color means current node| " ENDING_LEAVES_TREE " color means ending of tree}\", style=filled, fillcolor=" CURRENT_NODE_COLOR "];\n");
-    DOT_("root->test_tree1->test_tree2;\n")
+    DOT_("root->test_tree1 [color=" ROOT_INFO_EDGE_COLOR "];")
+    DOT_("test_tree1->test_tree2 [color = " DEFAULT_EDGE_COLOR "];\n")
     DOT_("info_to_color1->root; info_to_color2->test_tree2;\n")
     DOT_("}");
     fclose(dot_file);

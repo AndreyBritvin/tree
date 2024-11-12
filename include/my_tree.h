@@ -6,6 +6,8 @@
 #include <stdarg.h>
 
 #ifndef NDEBUG
+    #define CHECK_TREE(tree_to_check); \
+        if (int err_num = verificator(tree_to_check, tree_to_check->root, 0)) return err_num;
     #define TREE_DUMP(tree_to_dump, curr_node, ...) \
         tree_dump(tree_to_dump, curr_node, __func__, __FILE__, __LINE__, __VA_ARGS__);
     #define DEBUG_INFO , const char * funcname, const char * filename, const int fileline
@@ -48,7 +50,8 @@ node_t* new_node(my_tree_t tree, tree_val_t data, node_t* left_node, node_t* rig
 err_code_t tree_ctor(my_tree_t* tree);
 err_code_t tree_dtor (node_t* tree);
 
-err_code_t print_tree(node_t* tree);
+err_code_t print_tree(my_tree_t* tree);
+err_code_t print_node(node_t* tree);
 err_code_t add_node(my_tree_t *tree, tree_val_t data_to_add);
 
 err_code_t paste_instruction();

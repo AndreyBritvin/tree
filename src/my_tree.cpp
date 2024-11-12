@@ -44,7 +44,7 @@ err_code_t add_node(my_tree_t *tree, tree_val_t data_to_add)
     node_t* appended_node = add_node_by_root(tree, tree->root, data_to_add);
     tree->size += 1;
 
-    // TREE_DUMP(tree, appended_node, "Added this node");
+    TREE_DUMP(tree, appended_node, "Added this node");
 
     return OK;
 }
@@ -53,7 +53,8 @@ static node_t* add_node_by_root(my_tree_t* tree, node_t* curr_node, tree_val_t d
 {
     if (curr_node == NULL) return new_node(tree, data_to_add, NULL, NULL);
 
-    // TREE_DUMP(tree, curr_node, "Comparing data node.data = %d with data_to_add = %d", curr_node->data, data_to_add);
+    TREE_DUMP(tree, curr_node,
+              "Comparing node.data = %d with data_to_add = %d", curr_node->data, data_to_add);
 
     node_t*node_to_return = NULL;
     if (curr_node->data < data_to_add)
@@ -78,14 +79,23 @@ static node_t* add_node_by_root(my_tree_t* tree, node_t* curr_node, tree_val_t d
     return node_to_return;
 }
 
-err_code_t print_tree(node_t* tree)
+err_code_t print_tree(my_tree_t* tree)
 {
-    if (tree == NULL) return ERROR_TREE_IS_NULL; // TODO: parse this error
+    CHECK_TREE(tree);
+
+    print_node(tree->root);
+
+    return OK;
+}
+
+err_code_t print_node(node_t* tree)
+{
+    if (tree == NULL) return ERROR_TREE_IS_NULL;
 
     printf("(");
-    if (tree->left  != NULL) print_tree(tree->left);
+    if (tree->left  != NULL) print_node(tree->left);
     printf("%d", tree->data);
-    if (tree->right != NULL) print_tree(tree->right);
+    if (tree->right != NULL) print_node(tree->right);
     printf(")");
 
     return OK;
