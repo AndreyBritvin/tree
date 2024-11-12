@@ -48,7 +48,8 @@ struct my_tree_t
 node_t* new_node(my_tree_t tree, tree_val_t data, node_t* left_node, node_t* right_node);
 
 err_code_t tree_ctor(my_tree_t* tree);
-err_code_t tree_dtor (node_t* tree);
+err_code_t tree_dtor(my_tree_t* tree);
+err_code_t node_dtor (node_t* tree);
 
 err_code_t print_tree(my_tree_t* tree);
 err_code_t print_node(node_t* tree);

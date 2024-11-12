@@ -25,7 +25,7 @@ int main()
     print_tree(&test_tree);
     printf("\n");
 
-    tree_dtor(test_tree.root);
+    tree_dtor(&test_tree);
 
     disable_logging();
 

@@ -10,6 +10,8 @@ static node_t* add_node_by_root(my_tree_t* tree, node_t* curr_node, tree_val_t d
 
 node_t* new_node(my_tree_t* tree, tree_val_t data, node_t* left_node, node_t* right_node)
 {
+    assert(tree);
+
     node_t* node = (node_t*) calloc(1, sizeof(node_t));
 
     node->data  =       data;
@@ -27,20 +29,30 @@ err_code_t tree_ctor(my_tree_t* tree)
     return OK;
 }
 
-err_code_t tree_dtor(node_t* tree)
+err_code_t tree_dtor(my_tree_t* tree)
 {
-    assert(tree);
+    CHECK_TREE(tree);
+    node_dtor(tree->root);
 
-    if (tree->left  != NULL) tree_dtor(tree->left);
-    if (tree->right != NULL) tree_dtor(tree->right);
+    return OK;
+}
 
-    free(tree);
+err_code_t node_dtor(node_t* node)
+{
+    assert(node);
+
+    if (node->left  != NULL) node_dtor(node->left);
+    if (node->right != NULL) node_dtor(node->right);
+
+    free(node);
 
     return OK;
 }
 
 err_code_t add_node(my_tree_t *tree, tree_val_t data_to_add)
 {
+    CHECK_TREE(tree);
+
     node_t* appended_node = add_node_by_root(tree, tree->root, data_to_add);
     tree->size += 1;
 
