@@ -87,7 +87,8 @@ err_code_t tree_dot(char *filename, my_tree_t* tree, node_t* curr_node, const ch
 static err_code_t init_graph(FILE* dot_file)
 {
     DOT_("digraph{\n"
-         "rankdir = TB;\n");
+         "rankdir = TB;\n"
+         "bgcolor=" BACKGROUND_COLOR ";");
 
     return OK;
 }
@@ -129,7 +130,7 @@ err_code_t make_node(FILE* dot_file, node_t* curr_node, node_t* node_to_select, 
     if (curr_node == node_to_select)
     {
         // shape_color = "shape";
-        fill_color = ", style=\"filled\", fillcolor = \"" CURRENT_NODE_COLOR "\""; // #d9b986
+        shape_color = ", color = \"" CURRENT_NODE_COLOR "\""; // #d9b986
         DOT_("info_node[shape = Mrecord, style = \"filled\", fillcolor = " CURRENT_NODE_COLOR ", label = \"");
         DOT_("%s", curr_action);
         DOT_("\", constraint = false];\n");
@@ -137,15 +138,18 @@ err_code_t make_node(FILE* dot_file, node_t* curr_node, node_t* node_to_select, 
     }
     if (curr_node->left == NULL && curr_node->right == NULL)
     {
-        shape_color = ENDING_LEAVES_TREE;
+        fill_color = ENDING_LEAVES_TREE;
     }
     else
     {
-        shape_color = DEFAULT_SHAPE_COLOR;
+        fill_color = DEFAULT_SHAPE_COLOR;
     }
 
-    DOT_("tree%p[shape = record; label = \"{<p> parent = %p|addr = %p |data = %d| {<l> left | <r> right}}\"; color = %s %s];\n",
-                                curr_node, curr_node->parent, curr_node, curr_node->data, shape_color, fill_color);
+    DOT_("tree%p[shape = record;"  //penwidth = 2.5;"
+         "label = \"{<p> parent = %p|addr = %p |data = %d| {<l> left %p | <r> right %p}}\"; style=\"filled\","
+         "fillcolor = \"%s\" %s];\n",
+                                curr_node, curr_node->parent, curr_node, curr_node->data, curr_node->left,
+                                                                curr_node->right, fill_color, shape_color);
 
     const char* edge_color = DEFAULT_EDGE_COLOR;
 
@@ -156,7 +160,7 @@ err_code_t make_node(FILE* dot_file, node_t* curr_node, node_t* node_to_select, 
         if (curr_node->left->parent != curr_node)
         {
             edge_color = BAD_EDGE_COLOR;
-            if (curr_node->left->parent == NULL) DOT_("NULL_PTR:<p>:n->tree%p [color=%s];\n", curr_node, edge_color)
+            if (curr_node->left->parent == NULL) DOT_("tree%p:<p>:n->NULL_PTR [color=%s];\n", curr_node->left, edge_color)
             else                                 DOT_("tree%p:<p>:n->tree%p [color=%s];\n", curr_node->left->parent, curr_node, edge_color)
         }
         DOT_("tree%p:<l>:s->tree%p [color=%s];\n", curr_node, curr_node->left, edge_color)
@@ -169,7 +173,7 @@ err_code_t make_node(FILE* dot_file, node_t* curr_node, node_t* node_to_select, 
         if (curr_node->right->parent != curr_node)
         {
             edge_color = BAD_EDGE_COLOR;
-            if (curr_node->right->parent == NULL) DOT_("NULL_PTR:<p>:n->tree%p [color=%s];\n", curr_node, edge_color)
+            if (curr_node->right->parent == NULL) DOT_("tree%p:<p>:n->NULL_PTR [color=%s];\n", curr_node->right, edge_color)
             else DOT_("tree%p:<p>:n->tree%p [color=%s];\n", curr_node->right->parent, curr_node, edge_color)
         }
         DOT_("tree%p:<r>:s->tree%p [color = %s];\n", curr_node, curr_node->right, edge_color)
@@ -193,9 +197,9 @@ err_code_t paste_instruction()
         "<img src=img/instruction.png>"
         "</pre>");
 
-    DOT_("test_tree1 [shape = record; label = \"{parent=addr|addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; color = " DEFAULT_SHAPE_COLOR "];\n");
-    DOT_("test_tree2 [shape = record; label = \"{parent=addr|addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; color = " ENDING_LEAVES_TREE ", style=filled, fillcolor = " CURRENT_NODE_COLOR "];\n");
-    DOT_("root[shape = Mrecord; label = \"{Tree at tree_addr|Tree size = ...|<r1> Root at ADDR}\" color = " ROOT_SHAPE_COLOR "]\n");
+    DOT_("test_tree1 [shape = record; label = \"{parent=addr|addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; color = \"" DEFAULT_SHAPE_COLOR "\"];\n");
+    DOT_("test_tree2 [shape = record; label = \"{parent=addr|addr = node address |data = tree.data| {<l1> left subtree | <r1> right subtree}}\"; color = \"" ENDING_LEAVES_TREE "\", style=filled, fillcolor = " CURRENT_NODE_COLOR "];\n");
+    DOT_("root[shape = Mrecord; label = \"{Tree at tree_addr|Tree size = ...|<r1> Root at ADDR}\" color = \"" ROOT_SHAPE_COLOR "\"]\n");
     DOT_("info_to_color1[shape=Mrecord, label=\"This rounded form indicates that its additional information\"];\n")
     DOT_("info_to_color2[shape=Mrecord, label=\"{" CURRENT_NODE_COLOR " color means current node| " ENDING_LEAVES_TREE " color means ending of tree}\", style=filled, fillcolor=" CURRENT_NODE_COLOR "];\n");
     DOT_("root->test_tree1->test_tree2;\n")
