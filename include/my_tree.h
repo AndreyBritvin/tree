@@ -45,7 +45,7 @@ struct my_tree_t
 #endif
 };
 
-node_t* new_node(my_tree_t tree, tree_val_t data, node_t* left_node, node_t* right_node);
+node_t* new_node(my_tree_t* tree, tree_val_t data, node_t* left_node, node_t* right_node);
 
 err_code_t tree_ctor(my_tree_t* tree);
 err_code_t tree_dtor(my_tree_t* tree);
